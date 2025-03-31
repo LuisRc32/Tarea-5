@@ -1,0 +1,22 @@
+import threading
+import time
+import random
+
+# 6. Procesos que imprimen intercaladamente
+class AlternatingProcesses:
+    def __init__(self):
+        self.turn = threading.Semaphore(1)
+    
+    def process1(self):
+        for _ in range(5):
+            self.turn.acquire()
+            print("Proceso 1 ejecutando")
+            time.sleep(random.random())
+            self.turn.release()
+    
+    def process2(self):
+        for _ in range(5):
+            self.turn.acquire()
+            print("Proceso 2 ejecutando")
+            time.sleep(random.random())
+            self.turn.release()
