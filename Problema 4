@@ -1,0 +1,35 @@
+import threading
+import time
+import random
+
+# 4. Problema del Barbero Dormilón
+class SleepingBarber:
+    def __init__(self, seats=3):
+        self.seats = seats
+        self.customers = threading.Semaphore(0)
+        self.barber_ready = threading.Semaphore(0)
+        self.mutex = threading.Semaphore(1)
+        self.waiting = 0
+    
+    def barber(self):
+        while True:
+            self.customers.acquire()
+            self.mutex.acquire()
+            self.waiting -= 1
+            self.mutex.release()
+            print("Barbero cortando cabello")
+            time.sleep(random.random())
+            self.barber_ready.release()
+    
+    def customer(self, id):
+        self.mutex.acquire()
+        if self.waiting < self.seats:
+            self.waiting += 1
+            print(f"Cliente {id} esperando")
+            self.mutex.release()
+            self.customers.release()
+            self.barber_ready.acquire()
+            print(f"Cliente {id} recibió corte")
+        else:
+            print(f"Cliente {id} se fue, no hay asientos")
+            self.mutex.release()
