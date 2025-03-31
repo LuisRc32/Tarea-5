@@ -1,0 +1,195 @@
+import threading
+import time
+import random
+
+# 1. Problema del Productor-Consumidor
+class ProducerConsumer:
+    def __init__(self):
+        self.buffer = []
+        self.buffer_size = 5
+        self.lock = threading.Semaphore(1)
+        self.empty = threading.Semaphore(self.buffer_size)
+        self.full = threading.Semaphore(0)
+    
+    def producer(self):
+        for _ in range(10):
+            self.empty.acquire()
+            self.lock.acquire()
+            item = random.randint(1, 100)
+            self.buffer.append(item)
+            print(f"Productor produjo: {item}")
+            self.lock.release()
+            self.full.release()
+            time.sleep(random.random())
+    
+    def consumer(self):
+        for _ in range(10):
+            self.full.acquire()
+            self.lock.acquire()
+            item = self.buffer.pop(0)
+            print(f"Consumidor consumió: {item}")
+            self.lock.release()
+            self.empty.release()
+            time.sleep(random.random())
+
+# 2. Problema de los Filósofos Comensales
+class Philosophers:
+    def __init__(self):
+        self.num_philosophers = 5
+        self.forks = [threading.Lock() for _ in range(self.num_philosophers)]
+    
+    def philosopher(self, i):
+        while True:
+            print(f"Filósofo {i} está pensando.")
+            time.sleep(random.random())
+            left = i
+            right = (i + 1) % self.num_philosophers
+            with self.forks[left], self.forks[right]:
+                print(f"Filósofo {i} está comiendo.")
+                time.sleep(random.random())
+
+# 3. Problema de los Lectores y Escritores
+class ReadersWriters:
+    def __init__(self):
+        self.readers = 0
+        self.resource = threading.Lock()
+        self.read_lock = threading.Lock()
+    
+    def reader(self):
+        while True:
+            with self.read_lock:
+                self.readers += 1
+                if self.readers == 1:
+                    self.resource.acquire()
+            print("Lector leyendo")
+            time.sleep(random.random())
+            with self.read_lock:
+                self.readers -= 1
+                if self.readers == 0:
+                    self.resource.release()
+    
+    def writer(self):
+        while True:
+            self.resource.acquire()
+            print("Escritor escribiendo")
+            time.sleep(random.random())
+            self.resource.release()
+
+# 4. Problema del Barbero Dormilón
+class SleepingBarber:
+    def __init__(self, seats=3):
+        self.seats = seats
+        self.customers = threading.Semaphore(0)
+        self.barber_ready = threading.Semaphore(0)
+        self.mutex = threading.Semaphore(1)
+        self.waiting = 0
+    
+    def barber(self):
+        while True:
+            self.customers.acquire()
+            self.mutex.acquire()
+            self.waiting -= 1
+            self.mutex.release()
+            print("Barbero cortando cabello")
+            time.sleep(random.random())
+            self.barber_ready.release()
+    
+    def customer(self, id):
+        self.mutex.acquire()
+        if self.waiting < self.seats:
+            self.waiting += 1
+            print(f"Cliente {id} esperando")
+            self.mutex.release()
+            self.customers.release()
+            self.barber_ready.acquire()
+            print(f"Cliente {id} recibió corte")
+        else:
+            print(f"Cliente {id} se fue, no hay asientos")
+            self.mutex.release()
+
+# 5. Cinta Transportadora (Productor múltiple y consumidor múltiple)
+class ConveyorBelt:
+    def __init__(self, size=5):
+        self.buffer = []
+        self.size = size
+        self.lock = threading.Semaphore(1)
+        self.empty = threading.Semaphore(size)
+        self.full = threading.Semaphore(0)
+    
+    def producer(self, id):
+        while True:
+            self.empty.acquire()
+            self.lock.acquire()
+            item = random.randint(1, 100)
+            self.buffer.append(item)
+            print(f"Productor {id} colocó: {item}")
+            self.lock.release()
+            self.full.release()
+            time.sleep(random.random())
+    
+    def consumer(self, id):
+        while True:
+            self.full.acquire()
+            self.lock.acquire()
+            item = self.buffer.pop(0)
+            print(f"Consumidor {id} tomó: {item}")
+            self.lock.release()
+            self.empty.release()
+            time.sleep(random.random())
+
+# 6. Procesos que imprimen intercaladamente
+class AlternatingProcesses:
+    def __init__(self):
+        self.turn = threading.Semaphore(1)
+    
+    def process1(self):
+        for _ in range(5):
+            self.turn.acquire()
+            print("Proceso 1 ejecutando")
+            time.sleep(random.random())
+            self.turn.release()
+    
+    def process2(self):
+        for _ in range(5):
+            self.turn.acquire()
+            print("Proceso 2 ejecutando")
+            time.sleep(random.random())
+            self.turn.release()
+
+# Creación de hilos y ejecución
+def main():
+    # Productor-Consumidor
+    pc = ProducerConsumer()
+    threading.Thread(target=pc.producer).start()
+    threading.Thread(target=pc.consumer).start()
+    
+    # Filósofos Comensales
+    ph = Philosophers()
+    for i in range(5):
+        threading.Thread(target=ph.philosopher, args=(i,)).start()
+    
+    # Lectores y Escritores
+    rw = ReadersWriters()
+    threading.Thread(target=rw.reader).start()
+    threading.Thread(target=rw.writer).start()
+    
+    # Barbero Dormilón
+    sb = SleepingBarber()
+    threading.Thread(target=sb.barber).start()
+    for i in range(5):
+        threading.Thread(target=sb.customer, args=(i,)).start()
+    
+    # Cinta Transportadora
+    cb = ConveyorBelt()
+    for i in range(3):
+        threading.Thread(target=cb.producer, args=(i,)).start()
+    for i in range(3):
+        threading.Thread(target=cb.consumer, args=(i,)).start()
+    
+    # Procesos alternados
+    ap = AlternatingProcesses()
+    threading.Thread(target=ap.process1).start()
+    threading.Thread(target=ap.process2).start()
+
+if __name__ == "__main__":
+    main()
