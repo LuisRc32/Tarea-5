@@ -1,0 +1,30 @@
+import threading
+import time
+import random
+
+# 3. Problema de los Lectores y Escritores
+class ReadersWriters:
+    def __init__(self):
+        self.readers = 0
+        self.resource = threading.Lock()
+        self.read_lock = threading.Lock()
+    
+    def reader(self):
+        while True:
+            with self.read_lock:
+                self.readers += 1
+                if self.readers == 1:
+                    self.resource.acquire()
+            print("Lector leyendo")
+            time.sleep(random.random())
+            with self.read_lock:
+                self.readers -= 1
+                if self.readers == 0:
+                    self.resource.release()
+    
+    def writer(self):
+        while True:
+            self.resource.acquire()
+            print("Escritor escribiendo")
+            time.sleep(random.random())
+            self.resource.release()
