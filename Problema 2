@@ -1,1 +1,19 @@
+import threading
+import time
+import random
 
+# 2. Problema de los Filósofos Comensales
+class Philosophers:
+    def __init__(self):
+        self.num_philosophers = 5
+        self.forks = [threading.Lock() for _ in range(self.num_philosophers)]
+    
+    def philosopher(self, i):
+        while True:
+            print(f"Filósofo {i} está pensando.")
+            time.sleep(random.random())
+            left = i
+            right = (i + 1) % self.num_philosophers
+            with self.forks[left], self.forks[right]:
+                print(f"Filósofo {i} está comiendo.")
+                time.sleep(random.random())
