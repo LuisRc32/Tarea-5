@@ -1,0 +1,33 @@
+import threading
+import time
+import random
+
+# 5. Cinta Transportadora (Productor múltiple y consumidor múltiple)
+class ConveyorBelt:
+    def __init__(self, size=5):
+        self.buffer = []
+        self.size = size
+        self.lock = threading.Semaphore(1)
+        self.empty = threading.Semaphore(size)
+        self.full = threading.Semaphore(0)
+    
+    def producer(self, id):
+        while True:
+            self.empty.acquire()
+            self.lock.acquire()
+            item = random.randint(1, 100)
+            self.buffer.append(item)
+            print(f"Productor {id} colocó: {item}")
+            self.lock.release()
+            self.full.release()
+            time.sleep(random.random())
+    
+    def consumer(self, id):
+        while True:
+            self.full.acquire()
+            self.lock.acquire()
+            item = self.buffer.pop(0)
+            print(f"Consumidor {id} tomó: {item}")
+            self.lock.release()
+            self.empty.release()
+            time.sleep(random.random())
